@@ -1,3 +1,4 @@
+import React from "react";
 import react from "react";
 
 import { Container } from './styles';
@@ -7,12 +8,13 @@ interface ISelectInputProps {
 		value: string | number;
 		label: string | number;
 	}[],
+	onChange(event: React.ChangeEvent<HTMLSelectElement>): void | undefined;
 }
 
-const SelectInput: React.FC<ISelectInputProps> = ({ options }) => {
+const SelectInput: React.FC<ISelectInputProps> = ({ options, onChange }) => {
 	return (
 		<Container>
-			<select>
+			<select onChange={onChange}>
 				{
 					options.map(option => (
 						<option
