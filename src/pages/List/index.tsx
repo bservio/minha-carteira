@@ -21,20 +21,21 @@ interface IData {
 	description: string;
 	amountFormated: string;
 	frequency: string;
-	dataFormated: string;
+	dateFormated: string;
 	tagColor: string;
 }
 
 const List: React.FC = () => {
-
 	const [data, setData] = useState<IData[]>([]);
 	const [monthSelected, setMonthSelected] = useState<string>('1');
 	const [yearSelected, setYearSelected] = useState<string>('2020');
+	const [selectedFrequency, setSelectedFrequency] = useState(['recorrente', 'eventual']);
 
 	const { type } = useParams();
+
 	const titleOptions = useMemo(() => {
 		return type === 'entry-balance'
-			? { title: 'Entradas', lineColor: '#F7931B' }
+			? { title: 'Entradas', lineColor: '#4E41F0' }
 			: { title: 'Saídas', lineColor: '#CC2A2C' };
 	}, [type]);
 
@@ -75,6 +76,18 @@ const List: React.FC = () => {
 		});
 	}, [listData]);
 
+	const handleFrequencyClick = (frequency: string) => {
+		const alreadySelected = selectedFrequency.findIndex(item => item === frequency);
+
+		if (alreadySelected >= 0) {
+			const filtered = selectedFrequency.filter(item => item !== frequency);
+			setSelectedFrequency(filtered);
+		} else {
+			setSelectedFrequency((prev) => [...prev, frequency]);
+		};
+	};
+
+
 	useEffect(() => {
 
 		const filteredData = listData.filter(item => {
@@ -82,8 +95,8 @@ const List: React.FC = () => {
 			const month = String(date.getMonth() + 1);
 			const year = String(date.getFullYear());
 
-			return month === monthSelected && year === yearSelected;
-		})
+			return month === monthSelected && year === yearSelected && selectedFrequency.includes(item.frequency);
+		});
 
 		const response = filteredData.map(item => {
 			return {
@@ -91,12 +104,12 @@ const List: React.FC = () => {
 				description: item.description,
 				amountFormated: formatCurrency(Number(item.amount)),
 				frequency: item.frequency,
-				dataFormated: date.transform(item.date, 'YYYY-MM-DD', 'DD/MM/YYYY'),
+				dateFormated: date.transform(item.date, 'YYYY-MM-DD', 'DD/MM/YYYY'),
 				tagColor: item.frequency === 'recorrente' ? '#4e41f0' : '#e44c4e'
 			}
 		})
 		setData(response);
-	}, [monthSelected, yearSelected, listData]);
+	}, [monthSelected, yearSelected, listData, selectedFrequency]);
 
 	return (
 		<Container>
@@ -117,13 +130,19 @@ const List: React.FC = () => {
 			<Filters>
 				<button
 					type="button"
-					className='tag-filter tag-filter-recurrent'
+					className={`tag-filter tag-filter-recurrent
+						${selectedFrequency.includes('recorrente') && 'tag-actived'}
+					`}
+					onClick={() => handleFrequencyClick('recorrente')}
 				>
 					Recorrentes
 				</button>
 				<button
 					type="button"
-					className='tag-filter tag-filter-eventual'
+					className={`tag-filter tag-filter-eventual
+						${selectedFrequency.includes('eventual') && 'tag-actived'}
+					`}
+					onClick={() => handleFrequencyClick('eventual')}
 				>
 					Eventuais
 				</button>
@@ -136,7 +155,7 @@ const List: React.FC = () => {
 							key={item.id}
 							tagColor={item.tagColor}
 							title={item.description}
-							subtitle={item.dataFormated}
+							subtitle={item.dateFormated}
 							amount={item.amountFormated}
 						/>
 					))
